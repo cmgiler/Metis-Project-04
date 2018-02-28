@@ -26,7 +26,7 @@
 			<form>
 				<div class="form-group blog-names">
 					<label for="blogName">Blog / Website</label>
-					<div class="radio" name="reuters">
+					<div class="radio" name="reuters_all">
 					  <label><input type="radio" name="optradio">Reuter's (www.reuters.com/articles)</label>
 					</div>
 					<!-- <div class="radio disabled">
@@ -75,8 +75,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
     <script type="text/javascript">
     	// Add functionality for date range form field
 		$(function() {
@@ -126,7 +127,8 @@
 		  .selectAll('.radio')
 		  .on('click', function(d) {
 		  	if (!this.getAttribute('class').includes('disabled')) {
-		  		update_topic_list(sample_topics[this.getAttribute('name')]);
+		  		update_topic_list(this.getAttribute('name'),
+		  						  document.getElementById('reportrange').getElementsByTagName('span')[0].textContent);
 		  	}
 		  })
 
@@ -161,12 +163,37 @@
 			 .text(function(d, i) {
 			 	return d+' ('+(Math.random()*100).toFixed(0)+')';
 			 })
+			}
 
+		function update_topic_list(blog_name, date_range){
+			date_range = date_range.split(' - ')
+			start_date = date_range[0]
+			end_date = date_range[1]
+			debugger;
+	       $.ajax({
+	         type: "POST",
+	         contentType: "application/json; charset=utf-8",
+	         url: "/get_categories",
+	         dataType: "json",
+	         async: true,
+	         data: "{\"data\": ["+blog_name+","+start_date+","+end_date+"]}",
+	         success: function (data) {
+	         	debugger;
+	           var chance = 100 * data["score"];
+	           d3.select("#chancebar")
+	             .attr("width", chance_scale(chance));
+	           d3.select("#percent_text")
+	             .attr("x", chance_scale(chance-5))
+	             .text(chance.toFixed(1) + "%");
+	         },
+	         error: function (result) {
+	         }
+	       })
+	     }
 
 // <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
 // 						  	<label class="form-check-label" for="inlineCheckbox1">Topic 1 (12)</label>
 
-		}
 	</script>
   </body>
 </html>
