@@ -12,6 +12,18 @@
     	h1 {
     		text-align: center;
     	}
+    	.ajax-loader {
+		  visibility: hidden;
+		  background-color: rgba(255,255,255,0.7);
+		  z-index: +100 !important;
+
+		}
+
+		/*img.resize {
+		    width:10px;  you can use % 
+		    height: auto;
+		}*/
+
     </style>
 
     <title>The Daily Summary</title>
@@ -24,6 +36,14 @@
 	<br />
 		<div class="container">
 			<form>
+				<div class="form-group">
+					<label for="dateRange">Date Range</label>
+					<div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+					    <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
+					    <span></span> <b class="caret"></b>
+					</div>
+				</div>
+				<hr/>
 				<div class="form-group blog-names">
 					<label for="blogName">Blog / Website</label>
 					<div class="radio" name="reuters_all">
@@ -37,14 +57,6 @@
 					</div> -->
 				</div>
 				<hr/>
-				<div class="form-group">
-					<label for="dateRange">Date Range</label>
-					<div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-					    <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>&nbsp;
-					    <span></span> <b class="caret"></b>
-					</div>
-				</div>
-				<hr/>
 				<div class="form-group topics-of-interest">
 					<label for="topicCategories">Topics of Interest</label>
 					<div class='container'>
@@ -53,17 +65,22 @@
 				  <hr/>
 				  <div class="form-group">
 				    <label for="exampleSelect1">Summary Length</label>
-				    <select class="form-control" id="exampleSelect1">
-				      <option>Auto (Currently 3 Sentences)</option>
-				      <option>(1) Sentence</option>
-				      <option>(2) Sentences</option>
-				      <option>(3) Sentences</option>
-				      <option>(5) Sentences</option>
+				    <select class="form-control" id="exampleSelect">
+				      <option selected="selected" value="3">Auto (Currently 3 Sentences)</option>
+				      <option value="1">(1) Sentence</option>
+				      <option value="2">(2) Sentences</option>
+				      <option value="3">(3) Sentences</option>
+				      <option value="5">(5) Sentences</option>
 				    </select>
 				  </div>
 				<br />
-			  	<div class="col-md-4 text-center">
-			  		<button type="submit" class="btn btn-primary">Generate Report</button>
+				<div class='col-md-12 text-center'>
+					<div class="ajax-loader">
+					  <img src="/static/loader.gif" class="img-responsive" />
+					</div>
+				<div>
+			  	<div class="col-md-12 text-center">
+			  		<button type="button" class="btn btn-primary generate-report">Generate Report</button>
 			  	</div>
 			</form>
 		</div>
@@ -79,14 +96,22 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
     <script type="text/javascript">
+
+    	var blog_name = ''
+    	var selected_categories = []
+
     	// Add functionality for date range form field
 		$(function() {
 
-		    var start = moment();
-		    var end = moment();
+		    var start = moment().subtract(2, 'days');
+		    var end = moment().subtract(2, 'days');
 
 		    function cb(start, end) {
 		        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+		        if (blog_name != '') {
+		        	update_topic_list(blog_name,
+		        	start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'))
+		        }
 		    }
 
 		    $('#reportrange').daterangepicker({
@@ -125,14 +150,15 @@
 
 		d3.select('.blog-names')
 		  .selectAll('.radio')
-		  .on('click', function(d) {
+		  .on('mousedown', function(d) {
 		  	if (!this.getAttribute('class').includes('disabled')) {
-		  		update_topic_list(this.getAttribute('name'),
+		  		blog_name = this.getAttribute('name')
+		  		update_topic_list(blog_name,
 		  						  document.getElementById('reportrange').getElementsByTagName('span')[0].textContent);
 		  	}
 		  })
 
-		function update_topic_list(topics) {
+		function create_topic_checkboxes(topics) {
 			d3.select('.topics-of-interest')
 			  .selectAll('.form-check')
 			  .remove()
@@ -147,11 +173,19 @@
 			x.append('input')
 			 .attr('class', 'form-check-input')
 			 .attr('type', 'checkbox')
+			 .attr('active', 0)
+			 .on('mousedown', function() {
+			 	if (this.getAttribute('active') == 1) {
+			 		this.setAttribute('active', 0)
+			 	} else if (this.getAttribute('active') == 0) {
+			 		this.setAttribute('active', 1)
+			 	}
+			 })
 			 .attr('id', function(d, i) {
 			 	return 'inlineCheckbox'+i;
 			 })
 			 .attr('value', function(d) {
-			  	return d;
+			  	return d[0];
 			 })
 
 			x.append('label')
@@ -161,35 +195,80 @@
 			 	return 'inlineCheckbox'+i;
 			 })
 			 .text(function(d, i) {
-			 	return d+' ('+(Math.random()*100).toFixed(0)+')';
+			 	return d[0]+' ('+d[1]+')';
 			 })
 			}
 
 		function update_topic_list(blog_name, date_range){
-			date_range = date_range.split(' - ')
-			start_date = date_range[0]
-			end_date = date_range[1]
-			debugger;
+			date_range = date_range.split(' - ');
+			var start_date = date_range[0];
+			var end_date = date_range[1];
+			var d = {};
+			d['blog_name'] = blog_name;
+			d['start_date'] = start_date;
+			d['end_date'] = end_date;
+			var d_str = JSON.stringify(d);
 	       $.ajax({
 	         type: "POST",
 	         contentType: "application/json; charset=utf-8",
 	         url: "/get_categories",
 	         dataType: "json",
 	         async: true,
-	         data: "{\"data\": ["+blog_name+","+start_date+","+end_date+"]}",
+	         data: d_str,
 	         success: function (data) {
-	         	debugger;
-	           var chance = 100 * data["score"];
-	           d3.select("#chancebar")
-	             .attr("width", chance_scale(chance));
-	           d3.select("#percent_text")
-	             .attr("x", chance_scale(chance-5))
-	             .text(chance.toFixed(1) + "%");
+	         	console.log(data);
+	         	create_topic_checkboxes(data);
 	         },
 	         error: function (result) {
 	         }
 	       })
 	     }
+
+	     d3.select('.generate-report').on('mousedown', function() {
+	     	console.log('GENERATE REPORT')
+	     	var date_range = document.getElementById('reportrange')
+	     						 .getElementsByTagName('span')[0]
+	     						 .textContent
+	    	date_range = date_range.split(' - ');
+			var start_date = date_range[0];
+			var end_date = date_range[1];
+			var d = {}
+			d['start_date'] = date_range[0]
+			d['end_date'] = date_range[1]
+			d['blog_name'] = blog_name
+			x = document.getElementById('exampleSelect')
+			d['num_sentences'] = x.selectedOptions[0].value
+			d['selected_categories'] = []
+			var checks = document.getElementsByClassName('form-check-input')
+			for (i=0; i < checks.length; i++) { 
+				if (checks[i].getAttribute('active') == "1") {
+					d['selected_categories'].push(checks[i].getAttribute('value'))
+				} 
+			}
+			d_str = JSON.stringify(d);
+			$.ajax({
+	         type: "POST",
+	         beforeSend: function(){
+			   $('.ajax-loader').css("visibility", "visible");
+			 },
+	         contentType: "application/json; charset=utf-8",
+	         url: "/get_summaries",
+	         dataType: "json",
+	         async: true,
+	         data: d_str,
+	         success: function(data, textStatus, jqXHR){
+                document.write(data);
+             },
+	         complete: function(){
+			    $('.ajax-loader').css("visibility", "hidden");
+			 },
+	         error: function(jqXHR, textStatus, errorThrown) {
+	         	// debugger;
+	         	document.write(jqXHR.responseText);
+	         	// console.log(jqXHR);
+	         }
+	       })
+	     })
 
 // <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
 // 						  	<label class="form-check-label" for="inlineCheckbox1">Topic 1 (12)</label>

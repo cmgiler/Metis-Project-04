@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+   <head>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+      <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+      <style>
+         h1 {
+            text-align: center;
+         }
+      </style>
+   </head>
+   <body>
+   
+      <h1>YOUR SUMMARIES</h1>
+         
+         
+            <div class="container-fluid">
+
+               {% for item in result %}
+
+               <div class="row">
+                  <div class='col-md-4'>
+                     <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
+                     <p><strong>Topic:</strong> {{ item.topic }} ({{ (item.topic_confidence*100)|round(2, 'floor') }}% Relevance)</p>
+                     <p>Published On: {{ item.datetime }}</p>
+                     <p> by {{ item.author }}.</p>
+                  </div>
+                  <div class='col-md-8'>
+                     <p> {{ item.summaries.Edmundson }} </p>
+                  </div>
+               </div>
+               <hr/>
+
+               {% endfor %}
+
+            </div>
+            
+
+      
+   </body>
+</html>

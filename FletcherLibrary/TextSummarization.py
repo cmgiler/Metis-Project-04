@@ -42,6 +42,9 @@ def FetchDataInDateRange(collection_name, start_date_str, end_date_str):
             data.append(d)
     return data
 
-def GetCategoryCounts(collection_name, start_date_str, end_date_str):
+def GetCategoryCounts(collection_name, start_date, end_date):
     data = FetchDataInDateRange(collection_name, start_date, end_date)
     return Counter([d['topic'] for d in data])
+
+def MakeSummary():
+    pass
