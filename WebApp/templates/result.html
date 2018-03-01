@@ -3,6 +3,16 @@
    <head>
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
       <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+      {% for item in result %}
+         <meta id="my-data-{{ loop.index }}" 
+               data-luhn="{{ item.summaries.Luhn }}"
+               data-lsa="{{ item.summaries.LSA }}"
+               data-edmundson="{{ item.summaries.Edmundson }}"
+               data-lexrank="{{ item.summaries.LexRank }}"
+               data-textrank="{{ item.summaries.TextRank }}"
+               data-full="{{ item.content }}">
+      {% endfor %}
+
       <style>
          h1 {
             text-align: center;
@@ -10,8 +20,10 @@
       </style>
    </head>
    <body>
-   
-      <h1>YOUR SUMMARIES</h1>
+      <br/>
+      <h1>Article Summaries</h1>
+      <br/>
+      <hr size=50 color='#cccccc'>
          
          
             <div class="container-fluid">
@@ -26,16 +38,43 @@
                      <p> by {{ item.author }}.</p>
                   </div>
                   <div class='col-md-8'>
-                     <p> {{ item.summaries.Edmundson }} </p>
+                     <p id="summary_{{ loop.index }}"> {{ item.summaries.Edmundson }} </p>
                   </div>
                </div>
-               <hr/>
+               <div class="row">
+                  <div class='col-md-4'>
+                     <p><em>Summarization Algorithm:</em></p>
+                     <select id="algorithm_{{ loop.index }}" onchange="UpdateSummary()">
+                         <option value="Edmundson" rel="icon-temperature">Edmundson</option>
+                         <option value="Luhn">Luhn</option>
+                         <option value="LexRank">Lex Rank</option>
+                         <option value="TextRank">Text Rank</option>
+                         <option value="LSA">LSA</option>
+                     </select> 
+                  </div>
+                  <div class='col-md-8'>
+                     <br />
+                     <!-- <button class='btn btn-info'>View Mark-Up</button> -->
+                  </div>
+               </div>
+               <hr size=10 color='#333333'>
 
                {% endfor %}
 
             </div>
             
-
+      <script>
+         function UpdateSummary() {
+            select_tags = document.getElementsByTagName('select')
+            for (i=1; i <= select_tags.length; i++) {
+               algo = select_tags[i-1].selectedOptions[0].value.toLowerCase();
+               meta_id = "my-data-"+i;
+               text = document.getElementById(meta_id).getAttribute('data-'+algo);
+               document.getElementById('summary_'+i).innerHTML = text;
+            }
+         }
+      </script>
       
    </body>
+
 </html>
