@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
    <head>
+      <title>Article Summaries</title>
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
       <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
       {% for item in result %}
@@ -14,14 +15,25 @@
       {% endfor %}
 
       <style>
-         h1 {
+         h1, h4 {
             text-align: center;
+         }
+         .summarization-algorithm {
+            text-align: center;
+         }
+         .item-content {
+            page-break-inside: avoid;
+         }
+         select {
+            text-align: center;
+            display: block;
+            margin: 0 auto;
          }
       </style>
    </head>
    <body>
       <br/>
-      <h1>Article Summaries</h1>
+      <h1>Your Curated Article Summaries</h1>
       <br/>
       <hr size=50 color='#cccccc'>
          
@@ -29,41 +41,48 @@
             <div class="container-fluid">
 
                {% for item in result %}
-
-               <div class="row">
-                  <div class='col-md-4'>
-                     <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
-                     <p><strong>Topic:</strong> {{ item.topic }} ({{ (item.topic_confidence*100)|round(2, 'floor') }}% Relevance)</p>
-                     <p>Published On: {{ item.datetime }}</p>
-                     <p> by {{ item.author }}.</p>
+               <div class='item-content'>
+                  <div class="row">
+                     <div class='col-md-4'>
+                        <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
+                        <p><strong>Topic:</strong> {{ item.topic }} ({{ (item.topic_confidence*100)|round(2, 'floor') }}% Relevance)</p>
+                        <p>Published On: {{ item.datetime }}</p>
+                        <p> by {{ item.author }}.</p>
+                     </div>
+                     <div class='col-md-8'>
+                        <p id="summary_{{ loop.index }}"> {{ item.summaries.Edmundson }} </p>
+                     </div>
                   </div>
-                  <div class='col-md-8'>
-                     <p id="summary_{{ loop.index }}"> {{ item.summaries.Edmundson }} </p>
+                  <br/>
+                  <div class="row d-print-none">
+                     <div class='col-md-2'>
+                        <p class='summarization-algorithm'><em>Summarization Algorithm:</em></p>
+                     </div>
+                     <div class='col-md-2'>
+                        <select id="algorithm_{{ loop.index }}" onchange="UpdateSummary()" text-align='center'>
+                            <option value="Edmundson" rel="icon-temperature">Edmundson</option>
+                            <option value="Luhn">Luhn</option>
+                            <option value="LexRank">Lex Rank</option>
+                            <option value="TextRank">Text Rank</option>
+                            <option value="LSA">LSA</option>
+                        </select> 
+                     </div>
+                     <div class='col-md-8'>
+                        <br />
+                        <!-- <button class='btn btn-info'>View Mark-Up</button> -->
+                     </div>
                   </div>
+                  <hr size=10 color='#333333'>
                </div>
-               <div class="row">
-                  <div class='col-md-4'>
-                     <p><em>Summarization Algorithm:</em></p>
-                     <select id="algorithm_{{ loop.index }}" onchange="UpdateSummary()">
-                         <option value="Edmundson" rel="icon-temperature">Edmundson</option>
-                         <option value="Luhn">Luhn</option>
-                         <option value="LexRank">Lex Rank</option>
-                         <option value="TextRank">Text Rank</option>
-                         <option value="LSA">LSA</option>
-                     </select> 
-                  </div>
-                  <div class='col-md-8'>
-                     <br />
-                     <!-- <button class='btn btn-info'>View Mark-Up</button> -->
-                  </div>
-               </div>
-               <hr size=10 color='#333333'>
-
                {% endfor %}
 
             </div>
             
       <script>
+         $(document).ready(function(){
+             $(this).scrollTop(0);
+         });
+
          function UpdateSummary() {
             select_tags = document.getElementsByTagName('select')
             for (i=1; i <= select_tags.length; i++) {
