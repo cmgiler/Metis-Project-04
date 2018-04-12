@@ -1,5 +1,5 @@
-# Metis Project #4
-### Topic Modeling & Extractive Text Summarization
+# YRNWS: Article Summarization
+### Web-based Flask application using NLP, topic modeling, and extractive text summarization algorithms to generate abbreviated reports of scraped Reuters articles.
 
 ### Web Application Demo:
 
